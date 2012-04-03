@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Element Picker</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Element Picker Example">
+    <meta name="author" content="Ted Benson">
+    <link href="bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="bootstrap/css/prettify.css" rel="stylesheet">
+    <script src="js/jquery.js"></script>
+    <script src="../bin/element-picker.js"></script>
+</head>
+
+<body>
+<div class="container">
+
+<div id="theRow" class="row">
+  <div class="span6">
+    <h2>Test</h2>
+    <p id="para">This is a test</p>
+    <button id="beginPick">Pick</button>
+    <button id="paraPick">Pick Para</button>
+  </div>
+</div>
+</div>
+<script>
+  $(function() {
+    $("#paraPick").click(function(e) {
+      window.ep.enablePicker();
+      window.ep.select($("#para"));
+    });
+   $("#beginPick").click(function(e) {
+      window.ep.enablePicker();
+    });
+  });
+</script>
+</body>
+
+</html>
+
