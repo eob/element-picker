@@ -20,41 +20,39 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 $ = jQuery
-$('head').append("""
-    <style>
-      .floatingBorder {
-        border: 2px solid red !important;
-        position: absolute;
-        z-order: 10000;
-      }
-    </style>
-""")
 
 class ElementPicker
   constructor: () ->
-    @highlightedClass = "elementPickerSelected"
-    @prevKey = 37
-    @nextKey = 39
-    @childKey = 40
-    @parentKey = 38
-    @selectKey = 13
-    @state = "OFF"
-    @border = $("<div id='elementPickerBorder' class='floatingBorder'></div>")
+    @highlightedClass = 'elementPickerSelected'
+    @prevKey = 37 #Left
+    @nextKey = 39 #Right
+    @childKey = 40 #Down
+    @parentKey = 38 #Up
+    @selectKey = 13 #Enter
+    @quitKey = 27 #ESC
+    @state = 'OFF'
+    @border = $('<div class=\'floatingBorder\' />')
+    @border.css({
+      display: 'none',
+      position: 'absolute',
+      zIndex: 65000,
+      background: 'rgba(255,0,0,0.3)'
+    })
     @border.hide()
     @selected = $()
+    @last = new Date
     $('html').append(@border)
    
   enablePicker: (callback) ->
-    if @state == "OFF"
-      @state = "ON"
+    if @state == 'OFF'
+      @state = 'ON'
       @callback = callback
       @.select($('body'))
-      $('body').keydown(@keyDown)
-      $('body').keyup(@keyUp)
+      $('body').keydown(@keyDown).keyup(@.keyUp).mousemove(@.mouseMove)
 
   disablePicker: () ->
-    if @state == "ON"
-      @state = "OFF"
+    if @state == 'ON'
+      @state = 'OFF'
       @.clearSelection()
 
   keyUp: (event) ->
@@ -65,12 +63,15 @@ class ElementPicker
     @selected = $()
  
   select: (element) ->
-    @border.offset(element.offset())
-    @border.width(element.width())
-    @border.height(element.height())
     @.clearSelection()
-    @border.show()
-    element.addClass(@highlightedClass)
+    offset = element.offset()
+    @border.css({
+     width:  element.outerWidth()  - 1, 
+     height: element.outerHeight() - 1, 
+     left:   offset.left, 
+     top:    offset.top 
+    });
+    @border.show(); 
     @selected = element
 
   getSelection: () ->
@@ -79,10 +80,29 @@ class ElementPicker
   hitSelection: (node) ->
     @callback(node)
 
+  mouseMove: (event) =>
+    if @state == "OFF"
+      return
+    el = event.target
+    now = new Date
+    return if now-@last < 25 # Only poll > 25ms increments
+    @last = now
+    
+    if el == document.body
+      @.clearSelection()
+    else if el.className == 'floatingBorder'
+      @border.hide()
+      el = document.elementFromPoint(event.clientX, event.clientY)
+    
+    el = $(el)
+    @.select(el)
+
   keyDown: (event) =>
+    if @state == "OFF"
+      return
     data = $('html').data()
-    if not data["pressed"]
-      data["pressed"] = true
+    if not data['pressed']
+      data['pressed'] = true
       switch event.which
         when @selectKey
           n = @.getSelection()
@@ -114,6 +134,9 @@ class ElementPicker
             @.select(n)
           event.preventDefault()
           break
+        when @quitKey
+          @.disablePicker()
+          event.preventDefault()
         else
 
 window.ep = new ElementPicker()
