@@ -6,10 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Element Picker Example">
     <meta name="author" content="Ted Benson">
-    <link href="bootstrap/css/bootstrap.min.css" rel="stylesheet">
-    <link href="bootstrap/css/prettify.css" rel="stylesheet">
+    <link href="../bin/bootstrap.min.css" rel="stylesheet" />
     <script src="js/jquery.js"></script>
     <script src="../bin/element-picker.js"></script>
+    <script src="../bin/element-callout.js"></script>
+    <script src="../bin/bootstrap.min.js"></script>
 </head>
 
 <body>
@@ -19,20 +20,19 @@
   <div class="span6">
     <h2>Test</h2>
     <p id="para">This is a test</p>
-    <button id="beginPick">Pick</button>
-    <button id="paraPick">Pick Para</button>
+    <button id="copyButton">Copy</button>
+    <button id="pasteButton">Paste</button>
   </div>
 </div>
 </div>
 <script>
   $(function() {
-    $("#paraPick").click(function(e) {
-      window.ep.enablePicker();
-      window.ep.select($("#para"));
+    $("#copyButton").click(function(e) {
+      window.ep.copy();
     });
-   $("#beginPick").click(function(e) {
-      window.ep.enablePicker();
-    });
+   $("#pasteButton").click(function(e) {
+     window.ep.paste();
+   });
   });
 </script>
 </body>
