@@ -19,7 +19,13 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+# Preamble
 $ = jQuery
+module = (name) ->
+  global[name] = global[name] or {}
+
+# Ensure the DSS namespace
+module 'DSS'
 
 class ElementCallout
   constructor: () ->
@@ -31,6 +37,5 @@ class ElementCallout
   close: (node) ->
     $(node).popover('hide')
 
-window.ec = new ElementCallout()
-
+DSS.ElementPicker = new ElementCallout()
 

@@ -1,5 +1,10 @@
 # Copyright (c) 2012 Edward Benson
 #
+# **ElementPicker** is a simple Javascript-based DOM node selection 
+# tool. It supports both keyboard and mouse navigation.
+#
+#### License
+#
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
 # "Software"), to deal in the Software without restriction, including
@@ -19,10 +24,28 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-$ = jQuery
+# Preamble
+$ = jQueryDss
+module = (name) ->
+  window[name] = window[name] or {}
 
+# Ensure the DSS namespace
+module 'DSS'
+
+#### Usage:
+#
+# window.ElementPicker.pick(callback, opts)
+# 
+# - callback is a function taking a single argument, the element picked
+# - options are the following:
+#     
+# *  **autoClear** (default: `true`). Clear selection when pick occurs. Manual
+#    clearing can be done with `window.ElementPicker.clearSelection()`
+#
+#  
 class ElementPicker
-  constructor: () ->
+  constructor: (options) ->
+    @opts = $.extend {}, {'autoClear':true}, options
     @highlightedClass = 'elementPickerSelected'
     @prevKey = 37 #Left
     @nextKey = 39 #Right
@@ -41,16 +64,35 @@ class ElementPicker
     #  background: 'rgba(0,0,0,0.7)',
     #  border: '1px solid black'
     #})
-    @pasteLocationOptions = """
-      <div>
-        <form id='pasterForm'>
-          <input id='pastePrepend' class='pasterBtn' type='submit' value='Prepend' />
-          <input id='pasteAppend' class='pasterBtn' type='submit' value='Append' />
-          <input id='pasteBefore' class='pasterBtn' type='submit' value='Place Before' />
-          <input id='pasteAfter' class='pasterBtn' type='submit' value='Place After' />
-        </form>
-      </div>
-    """
+    #@pasteLocationOptions = """
+    #  <div>
+    #    <h3>Paste</h3>
+    #    <input type="checkbox" id="pasteContent" />Content</div>
+    #    <input type="checkbox" id="pasteStyle" />Style</div>
+    #    <h3>Insert Location</h3>
+    #    <div style="padding-left: 15px; float: left; margin-right: 5px;">
+    #    <img src="/bin/where.png" />
+    #    </div>
+    #    <div style="margin-left: 5px">
+    #      <div style="margin-top:9px">
+    #        <input type="radio" style="margin-right: 3px" id="pasteBefore" name="pasteWhere" />Before
+    #      </div>
+    #      <div style="margin-top:18px">
+    #        <input type="radio" style="margin-right: 3px" id="pastePrepend" name="pasteWhere" />Prepend<br />
+    #      </div>
+    #      <div style="margin-top:-1px">
+    #        <input type="radio" style="margin-right: 3px" id="pasteReplace" name="pasteWhere" />Replace<br />
+    #      </div>
+    #      <div style="margin-top:0px">
+    #        <input type="radio" style="margin-right: 3px" id="pasteAppend" name="pasteWhere" />Append<br />
+    #      </div>
+    #      <div style="margin-top:13px">
+    #        <input type="radio" style="margin-right: 3px" id="pasteAfter" name="pasteWhere" />After
+    #      </div>
+    #    </div>
+    #    <button class="btn btn-primary pasterBtn">Paste</button><button class="btn pasteCancelBtn">Cancel</button>
+    #  </div>
+    #"""
     @border = $('<div id=\'floatingBorder\' class=\'floatingBorder\' />')
     @border.css({
       display: 'none',
@@ -64,20 +106,32 @@ class ElementPicker
     @last = new Date
     $('html').append(@border)
 
-  paste: () =>
-    callback = () ->
-    @.enablePicker(callback, yes)
-
-  enablePicker: (callback, shouldPaste) ->
+  pick: (callback, options) =>
+    @opts = $.extend {}, {'autoClear':true}, options
     if @state == 'OFF'
       @state = 'ON'
       @callback = callback
-      if shouldPaste? and shouldPaste == yes
-        @shouldPaste = yes
       @.select($('body'))
       $('html').keydown(@keyDown).keyup(@.keyUp)
       $('html').mousemove(@.mouseMove)
       $('html').mouseup(@.mouseUp)
+    else
+      console.log("Picker error: tried to pick but picker is already active")
+
+  #paste: () =>
+  #  callback = () ->
+  #  @.enablePicker(callback, yes)
+
+  #enablePicker: (callback) ->
+  #  if @state == 'OFF'
+  #    @state = 'ON'
+  #    @callback = callback
+  #    if shouldPaste? and shouldPaste == yes
+  #      @shouldPaste = yes
+  #    @.select($('body'))
+  #    $('html').keydown(@keyDown).keyup(@.keyUp)
+  #    $('html').mousemove(@.mouseMove)
+  #    $('html').mouseup(@.mouseUp)
 
   disablePicker: () ->
     if @state == 'ON'
@@ -107,49 +161,59 @@ class ElementPicker
     @selected
 
   hitSelection: (node) =>
-    if @shouldPaste
-      @pasterElem = node
-      @.disablePicker()
-      window.ec.callout(@pasterElem, "Where do you want to paste?", @pasteLocationOptions)
-      $(".pasterBtn").click (event) =>
-        window.ec.close(@pasterElem)
-        event.preventDefault()
-        @.pasterCallback(event)
+    if @opts.autoClear
+      @.clearSelection()
+    @callback(node)
+    #if @shouldPaste
+    #  @pasterElem = node
+    #  @state = "OFF"
+    #  window.ec.callout(@pasterElem, "Where do you want to paste?", @pasteLocationOptions)
+    #  $(".pasterBtn").click (event) =>
+    #    window.ec.close(@pasterElem)
+    #    @.clearSelection()
+    #    event.preventDefault()
+    #    @.pasterCallback(event)
+    #  $(".pasteCancelBtn").click (event) =>
+    #    @.clearSelection()
+    #    window.ec.close(@pasterElem)
+    #    event.preventDefault()
+    #else
+    #  html = node.clone().wrap('<div></div>').parent().html()
+    #  @.copy(html)
+    #  if @callback?
+    #    @callback(node)
 
-    else
-      html = node.clone().wrap('<div></div>').parent().html()
-      @.copy(html)
-      if @callback?
-        @callback(node)
+  #copy: (text) ->
+  #  if typeof text == "undefined"
+  #    @.enablePicker()
+  #    @shouldPaste = no
+  #  else
+  #    console.log("copy: " + text)
+  #    $.getJSON(@copyPasteServer + "/copy", {'data':text})
+  #    @.disablePicker()
 
-  copy: (text) ->
-    if typeof text == "undefined"
-      @.enablePicker()
-      @shouldPaste = no
-    else
-      console.log("copy: " + text)
-      $.getJSON(@copyPasteServer + "/copy", {'data':text})
-      @.disablePicker()
-
-  pasterCallback: (event) =>
-    $.getJSON(@copyPasteServer + "/paste?callback=?", (ret) =>
-      switch event.target.id
-        when "pastePrepend"
-          @pasterElem.prepend($(ret))
-          break
-        when "pasteAppend"
-         @pasterElem.append($(ret))
-         break
-        when "pasteBefore"
-          @pasterElem.before($(ret))
-          break
-        when "pasteAfter"
-          @pasterElem.after($(ret))
-          break
-        else
-          alert("Don't know where to put" + ret)
-      @pasterElem = null
-    )
+  #pasterCallback: (event) =>
+  #  $.getJSON(@copyPasteServer + "/paste?callback=?", (ret) =>
+  #    switch $("input:radio[name=pasteWhere]:checked").data("pasteLoc")
+  #      when "pasteReplace"
+  #        @pasteElem.replace($(ret))
+  #        break
+  #      when "pastePrepend"
+  #        @pasterElem.prepend($(ret))
+  #        break
+  #      when "pasteAppend"
+  #       @pasterElem.append($(ret))
+  #       break
+  #      when "pasteBefore"
+  #        @pasterElem.before($(ret))
+  #        break
+  #      when "pasteAfter"
+  #        @pasterElem.after($(ret))
+  #        break
+  #      else
+  #        alert("Don't know where to put" + ret)
+  #    @pasterElem = null
+  #  )
 
   mouseMove: (event) =>
     if @state == "OFF"
@@ -171,7 +235,6 @@ class ElementPicker
       return
     @state = "OFF"
     n = @.getSelection()
-    @.clearSelection()
     @.hitSelection(n)
     event.preventDefault()
 
@@ -183,6 +246,7 @@ class ElementPicker
       data['pressed'] = true
       switch event.which
         when @selectKey
+          @state = "OFF"
           n = @.getSelection()
           @.clearSelection()
           @.hitSelection(n)
@@ -217,4 +281,4 @@ class ElementPicker
           event.preventDefault()
         else
 
-window.ep = new ElementPicker()
+DSS.ElementPicker = new ElementPicker()
